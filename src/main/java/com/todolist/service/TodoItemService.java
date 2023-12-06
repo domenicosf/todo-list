@@ -20,4 +20,6 @@ public interface TodoItemService {
 
     TodoItemDto getTodoItemById(Long id) throws Exception;
 
+    void updatePastDueTodoItemStatuses();
+
 }

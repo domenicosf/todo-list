@@ -3,6 +3,13 @@ package com.todolist.controller;
 import com.todolist.model.dto.DescriptionDto;
 import com.todolist.model.dto.TodoItemDto;
 import com.todolist.service.TodoItemService;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +19,13 @@ import static com.todolist.model.entity.TodoStatus.NOT_DONE;
 
 @RestController
 @RequestMapping("/todo-items")
+@OpenAPIDefinition(
+        info = @Info(
+                title = "Todo Item List Api",
+                description = "" +
+                        "This Api Allow the creation, modification and list of todo items")
+)
+@Tag(name="Todo Api", description = "This Api Allow the creation, modification and list of todo items")
 public class TodoItemController {
 
     private final TodoItemService todoItemService;
@@ -21,7 +35,12 @@ public class TodoItemController {
     }
 
     @PostMapping
-    public TodoItemDto addItem(TodoItemDto itemDto) {
+    @Operation(description = "Create a new todo item",
+    responses = {
+            @ApiResponse(responseCode = "200", description = "Todo item created"),
+            @ApiResponse(responseCode = "400", description = "Invalid request")
+    })
+    public TodoItemDto addItem(@Validated  @RequestBody TodoItemDto itemDto) {
         return todoItemService.createTodoItem(itemDto);
     }
 

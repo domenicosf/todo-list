@@ -5,9 +5,12 @@ import com.todolist.model.entity.TodoStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
 public interface TodoItemRepository extends JpaRepository<TodoItem, Long> {
     List<TodoItem> findAllByStatus(TodoStatus status);
+    List<TodoItem> findAllByDueDateTimeBeforeAndStatusNot(LocalDateTime dueDateTime, TodoStatus status);
+
 }

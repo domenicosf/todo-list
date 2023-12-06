@@ -7,12 +7,14 @@ import com.todolist.model.dto.TodoItemDto;
 import com.todolist.model.entity.TodoItem;
 import com.todolist.model.entity.TodoStatus;
 import com.todolist.repository.TodoItemRepository;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-
+@Log4j2
 @Service
 public class TodoItemServiceImpl implements TodoItemService {
 
@@ -29,7 +31,7 @@ public class TodoItemServiceImpl implements TodoItemService {
                 .status(TodoStatus.NOT_DONE)
                 .creationDateTime(LocalDateTime.now())
                 .dueDateTime(todoItemDto.dueDateTime() != null ?
-                    todoItemDto.doneDateTime() : LocalDateTime.now())
+                    todoItemDto.dueDateTime() : LocalDateTime.now())
                 .build();
 
         todoItem = todoItemRepository.save(todoItem);
@@ -89,6 +91,25 @@ public class TodoItemServiceImpl implements TodoItemService {
         return mapToDTO(todoItemRepository.findById(id).orElseThrow(() -> new TodoItemNotFoundException(id)));
     }
 
+    @Scheduled(cron = "0 0/5 * * * *")
+    @Override
+    public void updatePastDueTodoItemStatuses() {
+        LocalDateTime now = LocalDateTime.now();
+        List<TodoItem> pastDueItems = todoItemRepository.findAllByDueDateTimeBeforeAndStatusNot(now, TodoStatus.PAST_DUE);
+
+        pastDueItems.forEach(todoItem -> {
+            TodoItem todoItemTemp = null;
+            try {
+                todoItemTemp = todoItemRepository.findById(todoItem.getId()).orElseThrow(() -> new TodoItemNotFoundException(todoItem.getId()));
+                todoItemTemp.setStatus(TodoStatus.PAST_DUE);
+                todoItemRepository.save(todoItemTemp);
+            } catch (TodoItemNotFoundException e) {
+                log.error(e);
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
 
     private TodoItemDto mapToDTO(TodoItem todoItem) {
         return TodoItemDto
@@ -98,6 +119,7 @@ public class TodoItemServiceImpl implements TodoItemService {
                 .status(todoItem.getStatus().name())
                 .creationDateTime(todoItem.getCreationDateTime())
                 .dueDateTime(todoItem.getDueDateTime())
+                .doneDateTime(todoItem.getDoneDateTime())
                 .build();
     }
 }
